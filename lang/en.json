@@ -1,0 +1,19 @@
+{
+  "common.prefix": "[{lightred}VoiceOverride{white}]",
+  "command.description": "Toggle mute all non-admin players",
+
+  "message.players_muted": "All non-admin players have been muted.",
+  "message.players_muted_ct": "All non-admin CT players have been muted.",
+  "message.players_muted_t": "All non-admin T players have been muted.",
+  "message.players_unmuted": "All players have been unmuted.",
+  "message.players_muted_timer": "All non-admin players have been muted for {0} seconds.",
+  "message.players_muted_timer_ct": "All non-admin CT players have been muted for {0} seconds.",
+  "message.players_muted_timer_t": "All non-admin T players have been muted for {0} seconds.",
+  "message.auto_unmuted": "[{lightred}VoiceOverride{white}] All players have been automatically unmuted after {0} seconds.",
+
+  "error.no_permission": "You don't have permission to use this command. Required: {0}",
+  "error.players_only": "This command can only be used by players.",
+  "error.invalid_player": "Invalid player.",
+  "error.missing_argument": "You must specify a team filter: @ct, @t, or @all",
+  "error.invalid_argument": "Invalid team filter. Use @ct, @t, or @all"
+}

@@ -1,0 +1,19 @@
+{
+  "common.prefix": "[{lightred}VoiceOverride{white}]",
+  "command.description": "Alternar silencio para todos los jugadores no administradores",
+
+  "message.players_muted": "Todos los jugadores no administradores han sido silenciados.",
+  "message.players_muted_ct": "Todos los jugadores CT no administradores han sido silenciados.",
+  "message.players_muted_t": "Todos los jugadores T no administradores han sido silenciados.",
+  "message.players_unmuted": "Todos los jugadores han sido reactivados.",
+  "message.players_muted_timer": "Todos los jugadores no administradores han sido silenciados durante {0} segundos.",
+  "message.players_muted_timer_ct": "Todos los jugadores CT no administradores han sido silenciados durante {0} segundos.",
+  "message.players_muted_timer_t": "Todos los jugadores T no administradores han sido silenciados durante {0} segundos.",
+  "message.auto_unmuted": "[{lightred}VoiceOverride{white}] Todos los jugadores han sido reactivados automáticamente después de {0} segundos.",
+
+  "error.no_permission": "No tienes permiso para usar este comando.",
+  "error.players_only": "Este comando solo puede ser usado por jugadores.",
+  "error.invalid_player": "Jugador inválido.",
+  "error.missing_argument": "Debes especificar un filtro de equipo: @ct, @t o @all",
+  "error.invalid_argument": "Filtro de equipo inválido. Usa @ct, @t o @all"
+}
