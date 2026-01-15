@@ -197,10 +197,10 @@ public class VoiceMuteService
 
     private bool HasAdminPermission(CCSPlayerController player)
     {
-        if (string.IsNullOrEmpty(_config.PermissionFlag))
+        if (string.IsNullOrEmpty(_config.AdminPermissionFlag))
             return false;
 
-        return AdminManager.PlayerHasPermissions(player, _config.PermissionFlag);
+        return AdminManager.PlayerHasPermissions(player, _config.AdminPermissionFlag);
     }
 
     private bool ShouldMutePlayer(CCSPlayerController player, TeamFilter teamFilter)

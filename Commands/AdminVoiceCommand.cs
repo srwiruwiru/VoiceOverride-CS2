@@ -14,19 +14,21 @@ public class AdminVoiceCommand
 {
     private readonly BaseConfig _config;
     private readonly VoiceMuteService _muteService;
+    private readonly TemporaryPermissionService _tempPermissionService;
     private readonly IStringLocalizer _localizer;
     private readonly List<string> _registeredCommands = new();
 
-    public AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, IStringLocalizer localizer)
+    public AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, TemporaryPermissionService tempPermissionService, IStringLocalizer localizer)
     {
         _config = config;
         _muteService = muteService;
+        _tempPermissionService = tempPermissionService;
         _localizer = localizer;
     }
 
     public void RegisterCommands(BasePlugin plugin)
     {
-        foreach (var commandName in _config.Commands)
+        foreach (var commandName in _config.VoiceMuteCommands)
         {
             if (string.IsNullOrWhiteSpace(commandName))
                 continue;
@@ -87,6 +89,17 @@ public class AdminVoiceCommand
         };
     }
 
+    private bool HasPermission(CCSPlayerController player)
+    {
+        if (AdminManager.PlayerHasPermissions(player, _config.AdminPermissionFlag))
+            return true;
+
+        if (_tempPermissionService.HasTemporaryPermission(player))
+            return true;
+
+        return false;
+    }
+
     private void OnCommand(CCSPlayerController? player, CommandInfo commandInfo)
     {
         if (player == null)
@@ -101,9 +114,9 @@ public class AdminVoiceCommand
             return;
         }
 
-        if (!AdminManager.PlayerHasPermissions(player, _config.PermissionFlag))
+        if (!HasPermission(player))
         {
-            commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer["error.no_permission", _config.PermissionFlag]}");
+            commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer["error.no_permission", _config.AdminPermissionFlag]}");
             return;
         }
 

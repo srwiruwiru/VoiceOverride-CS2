@@ -5,12 +5,14 @@ namespace VoiceOverride.Configs;
 
 public class BaseConfig : BasePluginConfig
 {
+    [JsonPropertyName("VoiceMuteCommands")]
+    public List<string> VoiceMuteCommands { get; set; } = new() { "css_adminvoice", "css_admv" };
 
-    [JsonPropertyName("Commands")]
-    public List<string> Commands { get; set; } = new() { "css_adminvoice", "css_admv" };
+    [JsonPropertyName("GrantPermissionCommands")]
+    public List<string> GrantPermissionCommands { get; set; } = new() { "css_grantvoice", "css_gv" };
 
-    [JsonPropertyName("PermissionFlag")]
-    public string PermissionFlag { get; set; } = "@css/root";
+    [JsonPropertyName("AdminPermissionFlag")]
+    public string AdminPermissionFlag { get; set; } = "@css/root";
 
     [JsonPropertyName("UseTimer")]
     public bool UseTimer { get; set; } = false;
