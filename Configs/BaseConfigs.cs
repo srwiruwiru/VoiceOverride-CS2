@@ -21,5 +21,5 @@ public class BaseConfig : BasePluginConfig
     public int TimerDuration { get; set; } = 30;
 
     [JsonPropertyName("EnableDebug")]
-    public bool EnableDebug { get; set; } = true;
+    public bool EnableDebug { get; set; } = false;
 }

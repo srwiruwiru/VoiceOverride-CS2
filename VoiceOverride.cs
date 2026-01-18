@@ -8,7 +8,7 @@ using VoiceOverride.Commands;
 
 namespace VoiceOverride;
 
-[MinimumApiVersion(354)]
+[MinimumApiVersion(355)]
 public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
 {
     public override string ModuleName => "VoiceOverride";
