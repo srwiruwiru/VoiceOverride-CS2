@@ -1,0 +1,34 @@
+{
+  "common.prefix": "[{lightred}VoiceOverride{white}]",
+  "command.description": "Alternar silencio para todos los jugadores no administradores",
+  "command.grant_description": "Otorgar acceso temporal al comando de voz a un jugador",
+
+  "message.players_muted": "Todos los jugadores no administradores han sido silenciados.",
+  "message.players_muted_ct": "Todos los jugadores CT no administradores han sido silenciados.",
+  "message.players_muted_t": "Todos los jugadores T no administradores han sido silenciados.",
+  "message.players_unmuted": "Todos los jugadores han sido reactivados.",
+  "message.players_muted_timer": "Todos los jugadores no administradores han sido silenciados durante {0} segundos.",
+  "message.players_muted_timer_ct": "Todos los jugadores CT no administradores han sido silenciados durante {0} segundos.",
+  "message.players_muted_timer_t": "Todos los jugadores T no administradores han sido silenciados durante {0} segundos.",
+  "message.auto_unmuted": "Todos los jugadores han sido reactivados automáticamente después de {0} segundos.",
+  "message.round_end_mute": "Todos los microfonos de los jugadores han sido silenciados por fin de ronda.",
+  "message.round_start_unmute": "Todos los microfonos de los jugadores han sido reactivados!",
+  "message.threshold_mute_enabled": "Voz silenciada: el servidor superó los {0} jugadores. Solo los admins pueden hablar.",
+  "message.threshold_mute_disabled": "Voz restaurada: el número de jugadores bajó de {0}.",
+
+  "message.permission_granted": "Acceso temporal al comando de voz otorgado a {0} hasta el cambio de mapa.",
+  "message.permission_granted_target": "Se te ha otorgado acceso temporal a los comandos de voz hasta que cambie el mapa.",
+  "message.permission_revoked": "Acceso temporal al comando de voz revocado de {0}.",
+  "message.permission_revoked_target": "Tu acceso temporal a los comandos de voz ha sido revocado.",
+  "message.permission_expired": "Tu acceso temporal a los comandos de voz ha expirado debido al cambio de mapa.",
+
+  "error.no_permission": "No tienes permiso para usar este comando. Requerido: {0}",
+  "error.players_only": "Este comando solo puede ser usado por jugadores.",
+  "error.invalid_player": "Jugador inválido.",
+  "error.missing_argument": "Debes especificar un filtro de equipo: @ct, @t o @all",
+  "error.invalid_argument": "Filtro de equipo inválido. Usa @ct, @t o @all",
+  "error.grant_missing_target": "Debes especificar un nombre de jugador, userid (#id) o número de slot.",
+  "error.target_not_found": "Jugador '{0}' no encontrado.",
+  "error.target_is_bot": "No puedes otorgar permisos a bots.",
+  "error.target_already_admin": "El jugador '{0}' ya tiene permisos de administrador."
+}
