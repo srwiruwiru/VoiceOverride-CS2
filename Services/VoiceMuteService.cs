@@ -21,8 +21,13 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
     private bool _isGlobalMuted = false;
     private bool _isThresholdMuted = false;
 
+    private bool _isVoiceMuted = false;
+    private Timer? _voiceGraceTimer = null;
+    private readonly HashSet<int> _activeSpeakers = [];
+
     public bool IsGlobalMuted => _isGlobalMuted;
     public bool IsThresholdMuteActive => _isThresholdMuted;
+    public bool IsVoiceMuted => _isVoiceMuted;
 
     public bool AnyAdminMuteActive()
     {
@@ -236,11 +241,8 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
         }
         Logger.LogInfo("VoiceMute", $"Global mute {(mute ? "enabled" : "disabled")}. Affected {count} speakers.");
 
-        var message = mute
-            ? $"{_localizer["common.prefix"]} {_localizer["message.round_end_mute"]}"
-            : $"{_localizer["common.prefix"]} {_localizer["message.round_start_unmute"]}";
-
-        Server.PrintToChatAll(message);
+        var key = mute ? "message.global_mute" : "message.global_unmute";
+        Server.PrintToChatAll($"{_localizer["common.prefix"]} {_localizer[key]}");
     }
 
     public void EnableThresholdMute()
@@ -386,6 +388,126 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
         StopTimer(player);
     }
 
+    public void OnAdminStartedSpeaking(int playerSlot)
+    {
+        _activeSpeakers.Add(playerSlot);
+        if (_voiceGraceTimer != null)
+        {
+            _voiceGraceTimer.Dispose();
+            _voiceGraceTimer = null;
+            Logger.LogDebug("VoiceMute", $"Grace timer cancelled — privileged player (slot {playerSlot}) resumed speaking");
+        }
+
+        if (_isVoiceMuted)
+            return;
+
+        _isVoiceMuted = true;
+        int count = 0;
+
+        foreach (var speaker in Utilities.GetPlayers())
+        {
+            if (speaker == null || !speaker.IsValid || speaker.IsBot)
+                continue;
+
+            if (IsPrivilegedPlayer(speaker))
+                continue;
+
+            foreach (var listener in Utilities.GetPlayers())
+            {
+                if (listener == null || !listener.IsValid || listener.IsBot)
+                    continue;
+
+                try
+                {
+                    listener.SetListenOverride(speaker, ListenOverride.Mute);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("VoiceMute", $"[VoiceMute] Error applying voice mute for {speaker.PlayerName}: {ex.Message}");
+                }
+            }
+            count++;
+        }
+
+        Logger.LogInfo("VoiceMute", $"Voice-activated mute enabled. Muted {count} non-admin speakers.");
+        Server.PrintToChatAll($"{_localizer["common.prefix"]} {_localizer["message.voice_mute_started"]}");
+    }
+
+    public void OnAdminStoppedSpeaking(int playerSlot)
+    {
+        _activeSpeakers.Remove(playerSlot);
+
+        if (_activeSpeakers.Count > 0)
+            return;
+
+        if (!_isVoiceMuted)
+            return;
+
+        if (_config.UseTimer && _config.TimerDuration > 0)
+        {
+            _voiceGraceTimer?.Dispose();
+            _voiceGraceTimer = new Timer(_ =>
+            {
+                Server.NextFrame(() =>
+                {
+                    if (_activeSpeakers.Count == 0)
+                    {
+                        DisableVoiceMute();
+                    }
+                    _voiceGraceTimer = null;
+                });
+            }, null, TimeSpan.FromSeconds(_config.TimerDuration), Timeout.InfiniteTimeSpan);
+
+            Logger.LogDebug("VoiceMute", $"Voice grace timer started ({_config.TimerDuration}s)");
+        }
+        else
+        {
+            DisableVoiceMute();
+        }
+    }
+
+    public void DisableVoiceMute()
+    {
+        if (!_isVoiceMuted)
+            return;
+
+        _isVoiceMuted = false;
+        _activeSpeakers.Clear();
+
+        _voiceGraceTimer?.Dispose();
+        _voiceGraceTimer = null;
+
+        int count = 0;
+
+        foreach (var speaker in Utilities.GetPlayers())
+        {
+            if (speaker == null || !speaker.IsValid || speaker.IsBot)
+                continue;
+
+            if (IsPrivilegedPlayer(speaker))
+                continue;
+
+            foreach (var listener in Utilities.GetPlayers())
+            {
+                if (listener == null || !listener.IsValid || listener.IsBot)
+                    continue;
+
+                try
+                {
+                    listener.SetListenOverride(speaker, ListenOverride.Default);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("VoiceMute", $"[VoiceMute] Error removing voice mute for {speaker.PlayerName}: {ex.Message}");
+                }
+            }
+            count++;
+        }
+
+        Logger.LogInfo("VoiceMute", $"Voice-activated mute disabled. Restored {count} non-admin speakers.");
+        Server.PrintToChatAll($"{_localizer["common.prefix"]} {_localizer["message.voice_mute_ended"]}");
+    }
+
     public void Cleanup()
     {
         foreach (var timer in _activeTimers.Values)
@@ -396,5 +518,9 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
         _mutedStates.Clear();
         _activeTeamFilters.Clear();
         _muteStartTimes.Clear();
+
+        _voiceGraceTimer?.Dispose();
+        _voiceGraceTimer = null;
+        _activeSpeakers.Clear();
     }
 }

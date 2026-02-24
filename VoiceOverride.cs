@@ -13,7 +13,7 @@ namespace VoiceOverride;
 public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
 {
     public override string ModuleName => "VoiceOverride";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
     public override string ModuleAuthor => "luca.uy";
     public override string ModuleDescription => "Allows admins to mute all non-admin players for clear communication";
 
@@ -24,15 +24,22 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
     private AdminVoiceCommand? _adminVoiceCommand;
     private GrantPermissionCommand? _grantPermissionCommand;
 
+    private readonly Dictionary<int, Timer> _voiceSpeakingTimers = [];
+    private const int VoiceDebounceMs = 250;
+
     public override void Load(bool hotReload)
     {
         Utils.Logger.Config = Config;
 
-        RegisterEventHandler<EventGameEnd>(OnGameEnd);
-        RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
-        RegisterEventHandler<EventRoundStart>(OnRoundStart);
+        // Events
+        RegisterEventHandler<EventGameEnd>(OnGameEnd, HookMode.Pre);
+        RegisterEventHandler<EventCsWinPanelMatch>(OnWinPanelMatch, HookMode.Pre);
         RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
         RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect, HookMode.Pre);
+
+        // Listeners
+        RegisterListener<Listeners.OnMapStart>(OnMapStart);
+        RegisterListener<Listeners.OnClientVoice>(OnClientVoice);
 
         Utils.Logger.LogInfo("Core", "Plugin loaded successfully");
     }
@@ -70,18 +77,13 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
 
     private HookResult OnGameEnd(EventGameEnd @event, GameEventInfo info)
     {
-        Console.WriteLine("[VoiceOverride] GameEnd event triggered");
-
         if (_tempPermissionService != null)
         {
             var playersWithPermission = _tempPermissionService.GetPlayersWithTemporaryPermission();
-
             foreach (var player in playersWithPermission)
             {
                 if (player != null && player.IsValid)
-                {
                     player.PrintToChat($"{Localizer["common.prefix"]} {Localizer["message.permission_expired"]}");
-                }
             }
 
             _tempPermissionService.ClearAllTemporaryPermissions();
@@ -91,25 +93,29 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
         return HookResult.Continue;
     }
 
-    private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
+    private HookResult OnWinPanelMatch(EventCsWinPanelMatch @event, GameEventInfo info)
     {
-        if (Config.MuteNonAdminsOnRoundEnd)
-        {
-            if (_muteService != null && !_muteService.AnyAdminMuteActive())
-            {
-                _muteService.SetGlobalMute(true);
-            }
-        }
+        Utils.Logger.LogDebug("Core", "EventCsWinPanelMatch fired.");
+        if (Config.MuteNonAdminsOnGameEnd && _muteService != null)
+            _muteService.SetGlobalMute(true);
+
         return HookResult.Continue;
     }
 
-    private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
+    private void OnMapStart(string mapName)
     {
-        if (_muteService != null && _muteService.IsGlobalMuted)
+        AddTimer(5.0f, () =>
         {
-            _muteService.SetGlobalMute(false);
-        }
-        return HookResult.Continue;
+            if (_muteService != null && _muteService.IsGlobalMuted)
+            {
+                _muteService.SetGlobalMute(false);
+            }
+
+            if (_muteService != null && _muteService.IsVoiceMuted)
+            {
+                _muteService.DisableVoiceMute();
+            }
+        });
     }
 
     private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
@@ -137,13 +143,25 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
 
     private HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
     {
+        if (_muteService != null)
+        {
+            var player = @event.Userid;
+            if (player != null && player.IsValid && _muteService.HasAdminPermission(player))
+            {
+                var slot = player.Slot;
+                if (_voiceSpeakingTimers.TryGetValue(slot, out var t))
+                {
+                    t.Dispose();
+                    _voiceSpeakingTimers.Remove(slot);
+                }
+                Server.NextFrame(() => _muteService.OnAdminStoppedSpeaking(slot));
+            }
+        }
+
         if (!Config.MuteNonAdminsOnPlayerThreshold || _muteService == null)
             return HookResult.Continue;
 
-        Server.NextFrame(() =>
-        {
-            CheckAndUpdatePlayerThreshold();
-        });
+        Server.NextFrame(CheckAndUpdatePlayerThreshold);
 
         return HookResult.Continue;
     }
@@ -176,8 +194,43 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
         }
     }
 
+    private void OnClientVoice(int playerSlot)
+    {
+        if (!Config.MuteOnAdminVoice || _muteService == null)
+            return;
+
+        var player = Utilities.GetPlayerFromSlot(playerSlot);
+        if (player == null || !player.IsValid || player.IsBot)
+            return;
+
+        if (!_muteService.HasAdminPermission(player))
+            return;
+
+        _muteService.OnAdminStartedSpeaking(playerSlot);
+
+        if (_voiceSpeakingTimers.TryGetValue(playerSlot, out var existing))
+        {
+            existing.Dispose();
+            _voiceSpeakingTimers.Remove(playerSlot);
+        }
+
+        var slotCapture = playerSlot;
+        _voiceSpeakingTimers[playerSlot] = new Timer(_ =>
+        {
+            Server.NextFrame(() =>
+            {
+                _voiceSpeakingTimers.Remove(slotCapture);
+                _muteService.OnAdminStoppedSpeaking(slotCapture);
+            });
+        }, null, VoiceDebounceMs, Timeout.Infinite);
+    }
+
     public override void Unload(bool hotReload)
     {
+        foreach (var t in _voiceSpeakingTimers.Values)
+            t.Dispose();
+        _voiceSpeakingTimers.Clear();
+
         _muteService?.Cleanup();
         _tempPermissionService?.Cleanup();
         Utils.Logger.LogInfo("Core", "Plugin unloaded successfully");

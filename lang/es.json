@@ -3,18 +3,23 @@
   "command.description": "Alternar silencio para todos los jugadores no administradores",
   "command.grant_description": "Otorgar acceso temporal al comando de voz a un jugador",
 
-  "message.players_muted": "Todos los jugadores no administradores han sido silenciados.",
-  "message.players_muted_ct": "Todos los jugadores CT no administradores han sido silenciados.",
-  "message.players_muted_t": "Todos los jugadores T no administradores han sido silenciados.",
-  "message.players_unmuted": "Todos los jugadores han sido reactivados.",
-  "message.players_muted_timer": "Todos los jugadores no administradores han sido silenciados durante {0} segundos.",
-  "message.players_muted_timer_ct": "Todos los jugadores CT no administradores han sido silenciados durante {0} segundos.",
-  "message.players_muted_timer_t": "Todos los jugadores T no administradores han sido silenciados durante {0} segundos.",
-  "message.auto_unmuted": "Todos los jugadores han sido reactivados automáticamente después de {0} segundos.",
-  "message.round_end_mute": "Todos los microfonos de los jugadores han sido silenciados por fin de ronda.",
-  "message.round_start_unmute": "Todos los microfonos de los jugadores han sido reactivados!",
+  "common.team_ct": "CT",
+  "common.team_t": "T",
+  "common.team_all": "CT y T",
+
+  "message.players_muted": "Todos los jugadores {0} no administradores han sido muteados.",
+  "message.players_unmuted": "Todos los jugadores han sido desmuteados.",
+  "message.players_muted_timer": "Todos los jugadores {0} no administradores han sido muteados durante {1} segundos.",
+  "message.auto_unmuted": "Todos los jugadores han sido desmuteados automáticamente después de {0} segundos.",
+
+  "message.global_mute": "Todos los microfonos de los jugadores han sido muteados.",
+  "message.global_unmute": "Todos los microfonos de los jugadores han sido desmuteados!",
+
   "message.threshold_mute_enabled": "Voz silenciada: el servidor superó los {0} jugadores. Solo los admins pueden hablar.",
-  "message.threshold_mute_disabled": "Voz restaurada: el número de jugadores bajó de {0}.",
+  "message.threshold_mute_disabled": "Voz restaurada: el número de jugadores bajó de {0} y todos han sido desmuteados.",
+
+  "message.voice_mute_started": "Un administrador está hablando. Todos los jugadores han sido muteados.",
+  "message.voice_mute_ended": "El administrador dejó de hablar. Todos los jugadores han sido desmuteados.",
 
   "message.permission_granted": "Acceso temporal al comando de voz otorgado a {0} hasta el cambio de mapa.",
   "message.permission_granted_target": "Se te ha otorgado acceso temporal a los comandos de voz hasta que cambie el mapa.",

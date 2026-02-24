@@ -20,8 +20,11 @@ public class BaseConfig : BasePluginConfig
     [JsonPropertyName("TimerDuration")]
     public int TimerDuration { get; set; } = 30;
 
-    [JsonPropertyName("MuteNonAdminsOnRoundEnd")]
-    public bool MuteNonAdminsOnRoundEnd { get; set; } = false;
+    [JsonPropertyName("MuteNonAdminsOnGameEnd")]
+    public bool MuteNonAdminsOnGameEnd { get; set; } = false;
+
+    [JsonPropertyName("MuteOnAdminVoice")]
+    public bool MuteOnAdminVoice { get; set; } = false;
 
     [JsonPropertyName("MuteNonAdminsOnPlayerThreshold")]
     public bool MuteNonAdminsOnPlayerThreshold { get; set; } = false;

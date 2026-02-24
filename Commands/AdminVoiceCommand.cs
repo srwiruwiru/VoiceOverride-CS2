@@ -61,23 +61,18 @@ public class AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, 
         };
     }
 
-    private static string GetMuteMessageKey(TeamFilter teamFilter, bool useTimer)
+    private static string GetMuteMessageKey(bool useTimer)
     {
-        if (useTimer)
-        {
-            return teamFilter switch
-            {
-                TeamFilter.CT => "message.players_muted_timer_ct",
-                TeamFilter.T => "message.players_muted_timer_t",
-                _ => "message.players_muted_timer"
-            };
-        }
+        return useTimer ? "message.players_muted_timer" : "message.players_muted";
+    }
 
+    private string GetTeamName(TeamFilter teamFilter)
+    {
         return teamFilter switch
         {
-            TeamFilter.CT => "message.players_muted_ct",
-            TeamFilter.T => "message.players_muted_t",
-            _ => "message.players_muted"
+            TeamFilter.CT => _localizer["common.team_ct"],
+            TeamFilter.T => _localizer["common.team_t"],
+            _ => _localizer["common.team_all"]
         };
     }
 
@@ -137,8 +132,9 @@ public class AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, 
             else
             {
                 _muteService.MuteAll(player, teamFilter.Value);
-                var messageKey = GetMuteMessageKey(teamFilter.Value, true);
-                commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer[messageKey, _config.TimerDuration]}");
+                var messageKey = GetMuteMessageKey(true);
+                var teamName = GetTeamName(teamFilter.Value);
+                commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer[messageKey, teamName, _config.TimerDuration]}");
             }
         }
         else
@@ -146,8 +142,9 @@ public class AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, 
             _muteService.ToggleMute(player, teamFilter.Value);
             if (_muteService.IsMuted(player))
             {
-                var messageKey = GetMuteMessageKey(teamFilter.Value, false);
-                commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer[messageKey]}");
+                var messageKey = GetMuteMessageKey(false);
+                var teamName = GetTeamName(teamFilter.Value);
+                commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer[messageKey, teamName]}");
             }
             else
             {
