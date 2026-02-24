@@ -20,7 +20,7 @@ public class AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, 
 
     public void RegisterCommands(BasePlugin plugin)
     {
-        foreach (var commandName in _config.VoiceMuteCommands)
+        foreach (var commandName in _config.Commands.VoiceMuteCommands)
         {
             if (string.IsNullOrWhiteSpace(commandName))
                 continue;
@@ -78,7 +78,7 @@ public class AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, 
 
     private bool HasPermission(CCSPlayerController player)
     {
-        if (AdminManager.PlayerHasPermissions(player, _config.AdminPermissionFlag))
+        if (_config.Commands.AdminPermissions.Any(flag => AdminManager.PlayerHasPermissions(player, flag)))
             return true;
 
         if (_tempPermissionService.HasTemporaryPermission(player))
@@ -103,7 +103,7 @@ public class AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, 
 
         if (!HasPermission(player))
         {
-            commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer["error.no_permission", _config.AdminPermissionFlag]}");
+            commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer["error.no_permission", string.Join(", ", _config.Commands.AdminPermissions)]}");
             return;
         }
 
@@ -122,7 +122,7 @@ public class AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, 
 
         var wasMuted = _muteService.IsMuted(player);
 
-        if (_config.UseTimer)
+        if (_config.Timer.Enabled)
         {
             if (wasMuted)
             {
@@ -134,7 +134,7 @@ public class AdminVoiceCommand(BaseConfig config, VoiceMuteService muteService, 
                 _muteService.MuteAll(player, teamFilter.Value);
                 var messageKey = GetMuteMessageKey(true);
                 var teamName = GetTeamName(teamFilter.Value);
-                commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer[messageKey, teamName, _config.TimerDuration]}");
+                commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer[messageKey, teamName, _config.Timer.DurationSeconds]}");
             }
         }
         else

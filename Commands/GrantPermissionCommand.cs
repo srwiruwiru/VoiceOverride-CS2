@@ -19,7 +19,7 @@ public class GrantPermissionCommand(BaseConfig config, TemporaryPermissionServic
 
     public void RegisterCommands(BasePlugin plugin)
     {
-        foreach (var commandName in _config.GrantPermissionCommands)
+        foreach (var commandName in _config.Commands.GrantPermissionCommands)
         {
             if (string.IsNullOrWhiteSpace(commandName))
                 continue;
@@ -58,9 +58,9 @@ public class GrantPermissionCommand(BaseConfig config, TemporaryPermissionServic
             return;
         }
 
-        if (!AdminManager.PlayerHasPermissions(player, _config.AdminPermissionFlag))
+        if (!_config.Commands.AdminPermissions.Any(flag => AdminManager.PlayerHasPermissions(player, flag)))
         {
-            commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer["error.no_permission", _config.AdminPermissionFlag]}");
+            commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer["error.no_permission", string.Join(", ", _config.Commands.AdminPermissions)]}");
             return;
         }
 
@@ -85,7 +85,7 @@ public class GrantPermissionCommand(BaseConfig config, TemporaryPermissionServic
             return;
         }
 
-        if (AdminManager.PlayerHasPermissions(target, _config.AdminPermissionFlag))
+        if (_config.Commands.AdminPermissions.Any(flag => AdminManager.PlayerHasPermissions(target, flag)))
         {
             commandInfo.ReplyToCommand($"{_localizer["common.prefix"]} {_localizer["error.target_already_admin", target.PlayerName]}");
             return;

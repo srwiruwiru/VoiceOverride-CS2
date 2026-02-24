@@ -96,7 +96,7 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
     private HookResult OnWinPanelMatch(EventCsWinPanelMatch @event, GameEventInfo info)
     {
         Utils.Logger.LogDebug("Core", "EventCsWinPanelMatch fired.");
-        if (Config.MuteNonAdminsOnGameEnd && _muteService != null)
+        if (Config.Behavior.MuteNonAdminsOnMatchEnd && _muteService != null)
             _muteService.SetGlobalMute(true);
 
         return HookResult.Continue;
@@ -120,7 +120,7 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
 
     private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
     {
-        if (!Config.MuteNonAdminsOnPlayerThreshold || _muteService == null)
+        if (!Config.Threshold.Enabled || _muteService == null)
             return HookResult.Continue;
 
         var player = @event.Userid;
@@ -158,7 +158,7 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
             }
         }
 
-        if (!Config.MuteNonAdminsOnPlayerThreshold || _muteService == null)
+        if (!Config.Threshold.Enabled || _muteService == null)
             return HookResult.Continue;
 
         Server.NextFrame(CheckAndUpdatePlayerThreshold);
@@ -168,19 +168,19 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
 
     private void CheckAndUpdatePlayerThreshold()
     {
-        if (_muteService == null || !Config.MuteNonAdminsOnPlayerThreshold)
+        if (_muteService == null || !Config.Threshold.Enabled)
             return;
 
         var humanPlayers = Utilities.GetPlayers()
             .Count(p => p != null && p.IsValid && !p.IsBot);
 
-        Utils.Logger.LogDebug("Threshold", $"Player count check: {humanPlayers} / {Config.PlayerThreshold}");
+        Utils.Logger.LogDebug("Threshold", $"Player count check: {humanPlayers} / {Config.Threshold.PlayerCount}");
 
-        if (humanPlayers > Config.PlayerThreshold)
+        if (humanPlayers > Config.Threshold.PlayerCount)
         {
             if (!_muteService.IsThresholdMuteActive)
             {
-                Utils.Logger.LogInfo("Threshold", $"Threshold exceeded ({humanPlayers} > {Config.PlayerThreshold}). Enabling threshold mute.");
+                Utils.Logger.LogInfo("Threshold", $"Threshold exceeded ({humanPlayers} > {Config.Threshold.PlayerCount}). Enabling threshold mute.");
                 _muteService.EnableThresholdMute();
             }
         }
@@ -188,7 +188,7 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
         {
             if (_muteService.IsThresholdMuteActive)
             {
-                Utils.Logger.LogInfo("Threshold", $"Below threshold ({humanPlayers} <= {Config.PlayerThreshold}). Disabling threshold mute.");
+                Utils.Logger.LogInfo("Threshold", $"Below threshold ({humanPlayers} <= {Config.Threshold.PlayerCount}). Disabling threshold mute.");
                 _muteService.DisableThresholdMute();
             }
         }
@@ -196,7 +196,7 @@ public class VoiceOverride : BasePlugin, IPluginConfig<BaseConfig>
 
     private void OnClientVoice(int playerSlot)
     {
-        if (!Config.MuteOnAdminVoice || _muteService == null)
+        if (!Config.Behavior.MuteNonAdminsOnAdminVoice || _muteService == null)
             return;
 
         var player = Utilities.GetPlayerFromSlot(playerSlot);

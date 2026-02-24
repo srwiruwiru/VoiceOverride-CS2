@@ -99,7 +99,7 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
 
         Logger.LogInfo("VoiceMute", $"Admin {admin.PlayerName} muted {mutedCount} players");
 
-        if (_config.UseTimer && _config.TimerDuration > 0)
+        if (_config.Timer.Enabled && _config.Timer.DurationSeconds > 0)
         {
             StartTimer(admin);
         }
@@ -182,7 +182,7 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
                     {
                         if (adminRef.IsValid)
                         {
-                            var message = $"{_localizer["common.prefix"]} {_localizer["message.auto_unmuted", _config.TimerDuration]}";
+                            var message = $"{_localizer["common.prefix"]} {_localizer["message.auto_unmuted", _config.Timer.DurationSeconds]}";
                             adminRef.PrintToChat(message);
                         }
                     }
@@ -192,10 +192,10 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
                     }
                 }
             });
-        }, null, TimeSpan.FromSeconds(_config.TimerDuration), Timeout.InfiniteTimeSpan);
+        }, null, TimeSpan.FromSeconds(_config.Timer.DurationSeconds), Timeout.InfiniteTimeSpan);
 
         _activeTimers[admin] = timer;
-        Logger.LogDebug("VoiceMute", $"Started {_config.TimerDuration}s timer for admin {admin.PlayerName}");
+        Logger.LogDebug("VoiceMute", $"Started {_config.Timer.DurationSeconds}s timer for admin {admin.PlayerName}");
     }
 
     private void StopTimer(CCSPlayerController admin)
@@ -278,7 +278,7 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
         }
 
         Logger.LogInfo("VoiceMute", $"Threshold mute enabled. Muted {count} non-admin speakers.");
-        Server.PrintToChatAll($"{_localizer["common.prefix"]} {_localizer["message.threshold_mute_enabled", _config.PlayerThreshold]}");
+        Server.PrintToChatAll($"{_localizer["common.prefix"]} {_localizer["message.threshold_mute_enabled", _config.Threshold.PlayerCount]}");
     }
 
     public void DisableThresholdMute()
@@ -314,7 +314,7 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
         }
 
         Logger.LogInfo("VoiceMute", $"Threshold mute disabled. Restored {count} non-admin speakers.");
-        Server.PrintToChatAll($"{_localizer["common.prefix"]} {_localizer["message.threshold_mute_disabled", _config.PlayerThreshold]}");
+        Server.PrintToChatAll($"{_localizer["common.prefix"]} {_localizer["message.threshold_mute_disabled", _config.Threshold.PlayerCount]}");
     }
 
     public void ApplyThresholdMuteToNewPlayer(CCSPlayerController newPlayer)
@@ -343,10 +343,11 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
 
     public bool HasAdminPermission(CCSPlayerController player)
     {
-        if (string.IsNullOrEmpty(_config.AdminPermissionFlag))
+        var permissions = _config.Commands.AdminPermissions;
+        if (permissions == null || permissions.Count == 0)
             return false;
 
-        return AdminManager.PlayerHasPermissions(player, _config.AdminPermissionFlag);
+        return permissions.Any(flag => AdminManager.PlayerHasPermissions(player, flag));
     }
 
     private bool IsPrivilegedPlayer(CCSPlayerController player)
@@ -443,7 +444,7 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
         if (!_isVoiceMuted)
             return;
 
-        if (_config.UseTimer && _config.TimerDuration > 0)
+        if (_config.Timer.Enabled && _config.Timer.DurationSeconds > 0)
         {
             _voiceGraceTimer?.Dispose();
             _voiceGraceTimer = new Timer(_ =>
@@ -456,9 +457,9 @@ public class VoiceMuteService(BaseConfig config, IStringLocalizer localizer, Tem
                     }
                     _voiceGraceTimer = null;
                 });
-            }, null, TimeSpan.FromSeconds(_config.TimerDuration), Timeout.InfiniteTimeSpan);
+            }, null, TimeSpan.FromSeconds(_config.Timer.DurationSeconds), Timeout.InfiniteTimeSpan);
 
-            Logger.LogDebug("VoiceMute", $"Voice grace timer started ({_config.TimerDuration}s)");
+            Logger.LogDebug("VoiceMute", $"Voice grace timer started ({_config.Timer.DurationSeconds}s)");
         }
         else
         {
